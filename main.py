@@ -30,8 +30,8 @@ def get_omega_boundary(img):
     :param img: equals the mask float np 2d array
     :return: 2d np array equals |N_p| in the pixel (2d-coords) p
     """
-    S_without_omega = 1.0-img  # assuming img is a binary mask
-    return np.float_(4 > convolve(S_without_omega, four_neighbors_kernel, mode='nearest') > 0)
+    s_without_omega = 1.0-img  # assuming img is a binary mask
+    return np.float_(4 > convolve(s_without_omega, four_neighbors_kernel, mode='nearest') > 0)
 
 
 def get_basic_vector_field(img, mask):
@@ -66,7 +66,7 @@ def seamless_cloning(source, target, mask, offset=None, gradient_field_source_on
     eq_right = sum_f_star + vector_field_sum
 
     flat_Np = Np.flatten()
-    coo_matrix(flat_Np[flat_Np > 0],
+    # coo_matrix(flat_Np[flat_Np > 0],
 
 
 
