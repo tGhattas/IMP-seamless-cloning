@@ -65,9 +65,12 @@ def seamless_cloning(source, target, mask, offset=None, gradient_field_source_on
 
     eq_right = sum_f_star + vector_field_sum
 
+    Np = Np * mask
     flat_Np = Np.flatten()
-    # coo_matrix(flat_Np[flat_Np > 0],
-
+    flat_mask = mask.flatten()
+    flat_mask_ind = np.where(flat_mask)
+    inds = (np.arange(len(flat_mask_ind[0].shape[-1])),) + flat_mask_ind
+    sm = coo_matrix((flat_Np[np.int_(flat_mask)], inds))
 
 
 if __name__ == '__main__':
