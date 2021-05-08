@@ -2,6 +2,8 @@
 from utils import read_image
 from scipy.ndimage.filters import convolve
 from scipy.sparse import coo_matrix
+from scipy.sparse.linalg import spsolve
+from scipy import ndimage
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -69,17 +71,23 @@ def seamless_cloning(source, target, mask, offset=None, gradient_field_source_on
 
     flat_mask = mask.flatten()
     flat_mask_ind = np.where(flat_mask)
-    inds = (np.arange(flat_mask_ind[0].shape[-1]),) + flat_mask_ind
-
+    omega_vars_indices = (np.arange(flat_mask_ind[0].shape[-1]),) + flat_mask_ind
+    print(flat_mask_ind[0].shape[-1])
+    print(flat_mask_ind)
     Np = Np * mask
-    flat_Np = Np.flatten()
-    eq_left_sys = coo_matrix((flat_Np[flat_mask_ind], inds))
+    eq_left_1 = Np
+    eq_left_2 = ndimage.binary_dilation(Np, structure=four_neighbors_kernel).astype(np.float32)
+    eq_left = eq_left_1 - eq_left_2
+    flat_eq_left = eq_left.flatten()
+    eq_left_sys = coo_matrix((flat_eq_left[flat_mask_ind], omega_vars_indices))
 
     flat_eq_right = eq_right.flatten()
-    eq_right_sys = coo_matrix((flat_eq_right[flat_mask_ind], inds))
+    eq_right_sys = coo_matrix((flat_eq_right[flat_mask_ind], omega_vars_indices))
 
     print(eq_left_sys.shape)
     print(eq_right_sys.shape)
+    f = spsolve(eq_left_sys, eq_right_sys)
+    print(f)
 
 if __name__ == '__main__':
     target = read_image('./external/main-1.jpg', 1)
