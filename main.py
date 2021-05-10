@@ -2,7 +2,6 @@
 from utils import read_image, blending_example1
 from scipy.ndimage.filters import convolve
 from scipy.sparse import coo_matrix, dok_matrix
-
 from scipy.sparse.linalg import spsolve
 from scipy import ndimage
 import matplotlib.pyplot as plt
@@ -12,6 +11,9 @@ import numpy as np
 four_neighbors_kernel = [[0, 1, 0],
                          [1, 0, 1],
                          [0, 1, 0]]
+four_neighbors_kernel_with_center = [[0, 1, 0],
+                                     [1, 1, 1],
+                                     [0, 1, 0]]
 basic_vector_field_kernel = [[0, -1, 0],
                              [-1, 4, -1],
                              [0, -1, 0]]
@@ -29,14 +31,12 @@ def get_4_neigbours_amount(img):
 
 def get_omega_boundary(img):
     """
-    convolves img in order to calculate the discrete omega boundary as defined in the paper
+    dialates img and take diff between original img and dilated img
     :param img: equals the mask float np 2d array
     :return:
     """
-    s_without_omega = 1.0-img  # assuming img is a binary mask
-    neighbours_count = convolve(s_without_omega, four_neighbors_kernel, mode='nearest')
-    neighbours_count = (4 > neighbours_count) * neighbours_count
-    return np.float_(neighbours_count > 0)
+    dilated = ndimage.binary_dilation(img, structure=four_neighbors_kernel_with_center).astype(np.float64)
+    return dilated - img
 
 
 def get_basic_vector_field(img, mask):
@@ -69,7 +69,6 @@ def mark_neighbour_variables(pixel_coo, pixel_var_ind, reference, sparse_matrix)
     if r+1 < reference.shape[0] and reference[r+1, c]:
         sparse_matrix[pixel_var_ind, _to_flat_coo(r+1, c, reference.shape[1])] = -1.0
     if c-1 > 0 and reference[r, c-1]:
-        print(pixel_var_ind, _to_flat_coo(r, c-1, reference.shape[1]))
         sparse_matrix[pixel_var_ind, _to_flat_coo(r, c-1, reference.shape[1])] = -1.0
     if c+1 < reference.shape[1] and reference[r, c+1]:
         sparse_matrix[pixel_var_ind, _to_flat_coo(r, c+1, reference.shape[1])] = -1.0
@@ -84,7 +83,7 @@ def seamless_cloning(source, target, mask, offset=None, gradient_field_source_on
     :param gradient_field_source_only:
     :return:
     """
-    mask = mask > 0
+    mask = mask > 0.1
     Np = get_4_neigbours_amount(target) * mask  # for the calc of left first term in equation (7)
     omega_boundary = get_omega_boundary(mask)
     sum_f_star = convolve(omega_boundary * target, four_neighbors_kernel, mode='constant', cval=0.0) * mask  # for the
@@ -120,14 +119,14 @@ def seamless_cloning(source, target, mask, offset=None, gradient_field_source_on
     g = source.flatten()
     blend[flat_mask_ind] = f + g[flat_mask_ind]
     blend = blend.reshape(target.shape)
-    blend[omega_boundary > 0] -= source[omega_boundary>0]
+    # blend[omega_boundary>0] = target[omega_boundary>0]-source[omega_boundary>0]
 
     plt.imshow(omega_boundary, cmap=plt.cm.gray)
     plt.show()
 
     aux = blend.copy()
     aux[omega_boundary>0]=1
-    return blend, aux
+    return np.int_(blend * 255), np.int_(aux * 255)
 
 
 if __name__ == '__main__':
@@ -139,6 +138,9 @@ if __name__ == '__main__':
     plt.show()
     plt.imshow(aux, cmap=plt.cm.gray)
     plt.show()
+    basic = target.copy()
+    basic[mask>0.1] = source[mask>0.1]
+    plt.imshow(basic, cmap=plt.cm.gray), plt.show()
     blending_example1()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
