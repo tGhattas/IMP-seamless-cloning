@@ -74,7 +74,7 @@ def mark_neighbour_variables(pixel_coo, pixel_var_ind, reference, sparse_matrix)
         sparse_matrix[pixel_var_ind, _to_flat_coo(r, c+1, reference.shape[1])] = -1.0
 
 
-def seamless_cloning(source, target, mask, offset=None, gradient_field_source_only=True):
+def seamless_cloning_single_channel(source, target, mask, offset=None, gradient_field_source_only=True):
     """
     :param source:
     :param target:
@@ -120,27 +120,46 @@ def seamless_cloning(source, target, mask, offset=None, gradient_field_source_on
     blend[flat_mask_ind] = f + g[flat_mask_ind]
     blend = blend.reshape(target.shape)
     # blend[omega_boundary>0] = target[omega_boundary>0]-source[omega_boundary>0]
+    return np.int_(blend.clip(0, 1) * 255).astype('uint8')
 
-    plt.imshow(omega_boundary, cmap=plt.cm.gray)
-    plt.show()
 
-    aux = blend.copy()
-    aux[omega_boundary>0]=1
-    return np.int_(blend * 255), np.int_(aux * 255)
+def seamless_cloning(source, target, mask, offset=None, gradient_field_source_only=True):
+    """
 
+    :param source:
+    :param target:
+    :param mask:
+    :param offset:
+    :param gradient_field_source_only:
+    :return:
+    """
+    R = seamless_cloning_single_channel(source[...,0], target[...,0], mask, offset, gradient_field_source_only)
+    G = seamless_cloning_single_channel(source[...,1], target[...,1], mask, offset, gradient_field_source_only)
+    B = seamless_cloning_single_channel(source[...,2], target[...,2], mask, offset, gradient_field_source_only)
+    result = np.zeros_like(target, dtype='uint8')
+    result[:,:, 0] = R
+    result[:,:, 1] = G
+    result[:,:, 2] = B
+    plt.imshow(R), plt.show()
+    plt.imshow(G), plt.show()
+    plt.imshow(B), plt.show()
+    plt.imshow(result), plt.show()
+    return result
 
 if __name__ == '__main__':
-    target = read_image('./external/main-1.jpg', 1)
-    source = read_image('./external/blend-1.jpg', 1)
+    target = read_image('./external/main-1.jpg', 2)
+    source = read_image('./external/blend-1.jpg', 2)
     mask = read_image('./external/mask-1.jpg', 1)
-    cloned, aux = seamless_cloning(source, target, mask)
-    plt.imshow(cloned, cmap=plt.cm.gray)
-    plt.show()
-    plt.imshow(aux, cmap=plt.cm.gray)
-    plt.show()
+
+    # target_g = read_image('./external/main-1.jpg', 1)
+    # source_g = read_image('./external/blend-1.jpg', 1)
+    # cloned_single = seamless_cloning_single_channel(source_g, target_g, mask)
+    # plt.imshow(cloned_single), plt.show()
+    cloned = seamless_cloning(source, target, mask)
+    # plt.imshow(cloned), plt.show()
     basic = target.copy()
     basic[mask>0.1] = source[mask>0.1]
-    plt.imshow(basic, cmap=plt.cm.gray), plt.show()
-    blending_example1()
+    plt.imshow(basic), plt.show()#, cmap=plt.cm.gray
+    # blending_example1()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
