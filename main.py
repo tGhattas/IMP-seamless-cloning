@@ -140,10 +140,6 @@ def seamless_cloning(source, target, mask, offset=None, gradient_field_source_on
     result[:,:, 0] = R
     result[:,:, 1] = G
     result[:,:, 2] = B
-    plt.imshow(R), plt.show()
-    plt.imshow(G), plt.show()
-    plt.imshow(B), plt.show()
-    plt.imshow(result), plt.show()
     return result
 
 if __name__ == '__main__':
