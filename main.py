@@ -6,6 +6,7 @@ from scipy.sparse.linalg import spsolve
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import numpy as np
+import cv2
 
 # useful kernels
 four_neighbors_kernel = [[0, 1, 0],
@@ -74,6 +75,28 @@ def mark_neighbour_variables(pixel_coo, pixel_var_ind, reference, sparse_matrix)
         sparse_matrix[pixel_var_ind, _to_flat_coo(r, c+1, reference.shape[1])] = -1.0
 
 
+def apply_offset(offset, source, target, mask):
+    """
+
+    :param offset:
+    :param source:
+    :param target:
+    :param mask:
+    :return:
+    """
+    y_max, x_max = target.shape[:-1]
+    y_min, x_min = 0, 0
+
+    x_range = x_max - x_min
+    y_range = y_max - y_min
+
+    M = np.float64([[1, 0, offset[0]], [0, 1, offset[1]]])
+    warped_source = cv2.warpAffine(source, M, (x_range, y_range))
+
+    mask = mask[y_min:y_max, x_min:x_max]
+    return warped_source, mask
+
+
 def seamless_cloning_single_channel(source, target, mask, offset=None, gradient_field_source_only=True):
     """
     :param source:
@@ -83,6 +106,10 @@ def seamless_cloning_single_channel(source, target, mask, offset=None, gradient_
     :param gradient_field_source_only:
     :return:
     """
+    if offset:
+        source, mask = apply_offset(offset, source, target, mask)
+
+
     mask = mask > 0.1
     Np = get_4_neigbours_amount(target) * mask  # for the calc of left first term in equation (7)
     omega_boundary = get_omega_boundary(mask)
@@ -143,9 +170,14 @@ def seamless_cloning(source, target, mask, offset=None, gradient_field_source_on
     return result
 
 if __name__ == '__main__':
-    target = read_image('./external/main-1.jpg', 2)
-    source = read_image('./external/blend-1.jpg', 2)
-    mask = read_image('./external/mask-1.jpg', 1)
+    # target = read_image('./external/main-1.jpg', 2)
+    # source = read_image('./external/blend-1.jpg', 2)
+    # mask = read_image('./external/mask-1.jpg', 1)
+
+    target = read_image('./external/target1.jpg', 2)
+    source = read_image('./external/source1.jpg', 2)
+    mask = read_image('./external/mask1.png', 1)
+
 
     # target_g = read_image('./external/main-1.jpg', 1)
     # source_g = read_image('./external/blend-1.jpg', 1)
