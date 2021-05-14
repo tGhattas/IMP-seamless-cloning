@@ -99,7 +99,7 @@ def apply_offset(offset, source, target, mask):
 def get_laplacian_mat(n, m):
 
     """
-    taken from Git *** TODO: add link
+    taken from Git *** https://github.com/PPPW/poisson-image-editing
     Generate the Poisson matrix.
 
     Refer to:
