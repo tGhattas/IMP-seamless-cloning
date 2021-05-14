@@ -1,7 +1,7 @@
 
 from utils import read_image, blending_example1
 from scipy.ndimage.filters import convolve
-from scipy.sparse import coo_matrix, dok_matrix
+from scipy.sparse import coo_matrix, dok_matrix, lil_matrix, block_diag
 from scipy.sparse.linalg import spsolve
 from scipy import ndimage
 import matplotlib.pyplot as plt
@@ -48,7 +48,7 @@ def get_basic_vector_field(img, mask):
     :return: 2d array where in every entry it has the summation result
     """
     tmp = convolve(img, basic_vector_field_kernel, mode='constant', cval=0.0)
-    return tmp * mask
+    return tmp #* mask
 
 
 def _to_flat_coo(r, c, cols_num):
@@ -84,7 +84,7 @@ def apply_offset(offset, source, target, mask):
     :param mask:
     :return:
     """
-    y_max, x_max = target.shape[:-1]
+    y_max, x_max = target.shape
     y_min, x_min = 0, 0
 
     x_range = x_max - x_min
@@ -94,10 +94,32 @@ def apply_offset(offset, source, target, mask):
     warped_source = cv2.warpAffine(source, M, (x_range, y_range))
 
     mask = mask[y_min:y_max, x_min:x_max]
-    return warped_source, mask
+    return warped_source, mask, y_max, x_max, y_min, x_min, x_range, y_range
+
+def get_laplacian_mat(n, m):
+
+    """
+    taken from Git *** TODO: add link
+    Generate the Poisson matrix.
+
+    Refer to:
+    https://en.wikipedia.org/wiki/Discrete_Poisson_equation
+    Note: it's the transpose of the wiki's matrix
+    """
+    mat_D = lil_matrix((m, m))
+    mat_D.setdiag(-1, -1)
+    mat_D.setdiag(4)
+    mat_D.setdiag(-1, 1)
+
+    mat_A = block_diag([mat_D] * n).tolil()
+
+    mat_A.setdiag(-1, 1 * m)
+    mat_A.setdiag(-1, -1 * m)
+
+    return mat_A
 
 
-def seamless_cloning_single_channel(source, target, mask, offset=None, gradient_field_source_only=True):
+def seamless_cloning_single_channel(source, target, mask, offset, gradient_field_source_only=True):
     """
     :param source:
     :param target:
@@ -106,17 +128,18 @@ def seamless_cloning_single_channel(source, target, mask, offset=None, gradient_
     :param gradient_field_source_only:
     :return:
     """
-    if offset:
-        source, mask = apply_offset(offset, source, target, mask)
-
-
-    mask = mask > 0.1
+    source, mask, y_max, x_max, y_min, x_min, x_range, y_range = apply_offset(offset, source, target, mask)
     Np = get_4_neigbours_amount(target) * mask  # for the calc of left first term in equation (7)
     omega_boundary = get_omega_boundary(mask)
-    sum_f_star = convolve(omega_boundary * target, four_neighbors_kernel, mode='constant', cval=0.0) * mask  # for the
-    # calc of right first term in equation (7)
-    vector_field_sum = get_basic_vector_field(source, mask)  # for the calc of right second term in equation (7)
-    eq_right = sum_f_star + vector_field_sum
+
+    # sum_f_star = convolve(omega_boundary * target, four_neighbors_kernel, mode='constant', cval=0.0) * mask  # for the
+    # # calc of right first term in equation (7)
+    # vector_field_sum = get_basic_vector_field(source, mask)  # for the calc of right second term in equation (7)
+    # eq_right = sum_f_star + vector_field_sum
+
+    laplacian = get_laplacian_mat(y_range, x_range)
+    g = source.flatten()
+    eq_right = laplacian.dot(g)
 
     flat_mask = mask.flatten()
     flat_mask_ind = np.where(flat_mask > 0)  # returns all pixels indices
@@ -143,14 +166,14 @@ def seamless_cloning_single_channel(source, target, mask, offset=None, gradient_
 
     # reconstruct image
     blend = target.flatten()
-    g = source.flatten()
+
     blend[flat_mask_ind] = f + g[flat_mask_ind]
     blend = blend.reshape(target.shape)
     # blend[omega_boundary>0] = target[omega_boundary>0]-source[omega_boundary>0]
     return np.int_(blend.clip(0, 1) * 255).astype('uint8')
 
 
-def seamless_cloning(source, target, mask, offset=None, gradient_field_source_only=True):
+def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_only=True):
     """
 
     :param source:
@@ -160,6 +183,9 @@ def seamless_cloning(source, target, mask, offset=None, gradient_field_source_on
     :param gradient_field_source_only:
     :return:
     """
+
+
+    mask = mask > 0.1
     R = seamless_cloning_single_channel(source[...,0], target[...,0], mask, offset, gradient_field_source_only)
     G = seamless_cloning_single_channel(source[...,1], target[...,1], mask, offset, gradient_field_source_only)
     B = seamless_cloning_single_channel(source[...,2], target[...,2], mask, offset, gradient_field_source_only)
@@ -183,11 +209,12 @@ if __name__ == '__main__':
     # source_g = read_image('./external/blend-1.jpg', 1)
     # cloned_single = seamless_cloning_single_channel(source_g, target_g, mask)
     # plt.imshow(cloned_single), plt.show()
-    cloned = seamless_cloning(source, target, mask)
-    # plt.imshow(cloned), plt.show()
-    basic = target.copy()
-    basic[mask>0.1] = source[mask>0.1]
-    plt.imshow(basic), plt.show()#, cmap=plt.cm.gray
+    offset = (0, 66)
+    cloned = seamless_cloning(source, target, mask, offset=offset)
+    plt.imshow(cloned), plt.show()
+    # basic = target.copy()
+    # basic[mask>0.1] = source[mask>0.1]
+    # plt.imshow(basic), plt.show()#, cmap=plt.cm.gray
     # blending_example1()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
