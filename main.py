@@ -1,7 +1,6 @@
-
 from utils import read_image, blending_example1
 from scipy.ndimage.filters import convolve
-from scipy.sparse import coo_matrix, dok_matrix, lil_matrix, block_diag
+from scipy.sparse import coo_matrix, dok_matrix, lil_matrix, block_diag, identity
 from scipy.sparse.linalg import spsolve
 from scipy import ndimage
 import matplotlib.pyplot as plt
@@ -40,7 +39,7 @@ def get_omega_boundary(img):
     return dilated - img
 
 
-def get_basic_vector_field(img, mask):
+def get_basic_vector_field(img):
     """
     calculate sum of v_pq in 4-connected components as defined in term (11) of the paper
     :param img: float np 2d array
@@ -48,36 +47,31 @@ def get_basic_vector_field(img, mask):
     :return: 2d array where in every entry it has the summation result
     """
     tmp = convolve(img, basic_vector_field_kernel, mode='constant', cval=0.0)
-    return tmp #* mask
+    return tmp
 
 
-def _to_flat_coo(r, c, cols_num):
-    return r * cols_num + c
-
-
-def mark_neighbour_variables(pixel_coo, pixel_var_ind, reference, sparse_matrix):
+def make_identity_off_mask(mask, mat, y_range, x_range):
     """
-
-    :param pixel_coo:
-    :param pixel_var_ind:
-    :param reference:
-    :param sparse_matrix:
+    :param mask: binary mask defining f function
+    :param mat: sparse matrix of the left hand side equation system
+    :param y_range: obtained from apply_offset
+    :param x_range: obtained from apply_offset
     :return:
     """
-    r, c = pixel_coo
-    if r-1 > 0 and reference[r-1, c]:
-        sparse_matrix[pixel_var_ind, _to_flat_coo(r-1, c, reference.shape[1])] = -1.0
-    if r+1 < reference.shape[0] and reference[r+1, c]:
-        sparse_matrix[pixel_var_ind, _to_flat_coo(r+1, c, reference.shape[1])] = -1.0
-    if c-1 > 0 and reference[r, c-1]:
-        sparse_matrix[pixel_var_ind, _to_flat_coo(r, c-1, reference.shape[1])] = -1.0
-    if c+1 < reference.shape[1] and reference[r, c+1]:
-        sparse_matrix[pixel_var_ind, _to_flat_coo(r, c+1, reference.shape[1])] = -1.0
+    for y in range(1, y_range - 1):
+        for x in range(1, x_range - 1):
+            if mask[y, x] == 0:
+                ind = x + y * x_range
+                mat[ind, ind] = 1
+                mat[ind, ind + 1] = 0
+                mat[ind, ind - 1] = 0
+                mat[ind, ind + x_range] = 0
+                mat[ind, ind - x_range] = 0
 
 
 def apply_offset(offset, source, target, mask):
     """
-
+    Warp source according to offset.
     :param offset:
     :param source:
     :param target:
@@ -96,8 +90,8 @@ def apply_offset(offset, source, target, mask):
     mask = mask[y_min:y_max, x_min:x_max]
     return warped_source, mask, y_max, x_max, y_min, x_min, x_range, y_range
 
-def get_laplacian_mat(n, m):
 
+def get_laplacian_mat(n, m):
     """
     taken from Git *** https://github.com/PPPW/poisson-image-editing
     Generate the Poisson matrix.
@@ -129,48 +123,30 @@ def seamless_cloning_single_channel(source, target, mask, offset, gradient_field
     :return:
     """
     source, mask, y_max, x_max, y_min, x_min, x_range, y_range = apply_offset(offset, source, target, mask)
-    Np = get_4_neigbours_amount(target) * mask  # for the calc of left first term in equation (7)
-    omega_boundary = get_omega_boundary(mask)
-
-    # sum_f_star = convolve(omega_boundary * target, four_neighbors_kernel, mode='constant', cval=0.0) * mask  # for the
-    # # calc of right first term in equation (7)
-    # vector_field_sum = get_basic_vector_field(source, mask)  # for the calc of right second term in equation (7)
-    # eq_right = sum_f_star + vector_field_sum
 
     laplacian = get_laplacian_mat(y_range, x_range)
-    g = source.flatten()
-    eq_right = laplacian.dot(g)
-
+    flat_source = source[y_min:y_max, x_min:x_max].flatten()
+    flat_target = target[y_min:y_max, x_min:x_max].flatten()
     flat_mask = mask.flatten()
-    flat_mask_ind = np.where(flat_mask > 0)  # returns all pixels indices
 
-    flat_eq_left_1 = Np.flatten()
-    diag_indices = (np.arange(flat_mask_ind[0].shape[-1]), np.arange(flat_mask_ind[0].shape[-1]))
-    eq_left_1_sys = coo_matrix((flat_eq_left_1[flat_mask_ind], diag_indices))
-    eq_left_2_reference = ndimage.binary_dilation(Np, structure=four_neighbors_kernel).astype(np.float64) * mask
-    eq_left_sys = dok_matrix(eq_left_1_sys)
+    eq_left_sys = laplacian.tocsc()
 
-    # go over pixels and check
-    for pixel_var_ind in diag_indices[-1]:
-        pixel_coo = pixel_var_ind // Np.shape[1], pixel_var_ind % Np.shape[1]
-        mark_neighbour_variables(pixel_coo, pixel_var_ind, eq_left_2_reference, eq_left_sys)
-
-    eq_left_sys = eq_left_sys.tocsr()
+    # inside f
+    eq_right = laplacian.dot(flat_source)
 
     flat_eq_right = eq_right.flatten()
-    print(eq_left_sys.shape)
-    print(flat_eq_right[flat_mask_ind].shape)
-    print('max', np.max(flat_eq_right))
-    f = spsolve(eq_left_sys, flat_eq_right[flat_mask_ind]).astype(np.float64)
-    print(f)
+
+    # outside f
+    flat_eq_right[flat_mask == 0] = flat_target[flat_mask == 0]
+    make_identity_off_mask(mask, eq_left_sys, y_range, x_range)
+
+    s = spsolve(eq_left_sys, flat_eq_right).astype(np.float64)
 
     # reconstruct image
-    blend = target.flatten()
+    blend = s.reshape(target.shape)
+    blend = (blend.clip(0, 1) * 255).astype('uint8')
 
-    blend[flat_mask_ind] = f + g[flat_mask_ind]
-    blend = blend.reshape(target.shape)
-    # blend[omega_boundary>0] = target[omega_boundary>0]-source[omega_boundary>0]
-    return np.int_(blend.clip(0, 1) * 255).astype('uint8')
+    return blend
 
 
 def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_only=True):
@@ -183,17 +159,15 @@ def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_
     :param gradient_field_source_only:
     :return:
     """
-
-
     mask = mask > 0.1
-    R = seamless_cloning_single_channel(source[...,0], target[...,0], mask, offset, gradient_field_source_only)
-    G = seamless_cloning_single_channel(source[...,1], target[...,1], mask, offset, gradient_field_source_only)
-    B = seamless_cloning_single_channel(source[...,2], target[...,2], mask, offset, gradient_field_source_only)
+    mask = mask.astype('uint8')
     result = np.zeros_like(target, dtype='uint8')
-    result[:,:, 0] = R
-    result[:,:, 1] = G
-    result[:,:, 2] = B
+    for channel in range(len('RGB')):
+        result[..., channel] = seamless_cloning_single_channel(source[..., channel], target[..., channel], mask, offset,
+                                                                   gradient_field_source_only)
+
     return result
+
 
 if __name__ == '__main__':
     # target = read_image('./external/main-1.jpg', 2)
@@ -203,7 +177,6 @@ if __name__ == '__main__':
     target = read_image('./external/target1.jpg', 2)
     source = read_image('./external/source1.jpg', 2)
     mask = read_image('./external/mask1.png', 1)
-
 
     # target_g = read_image('./external/main-1.jpg', 1)
     # source_g = read_image('./external/blend-1.jpg', 1)
