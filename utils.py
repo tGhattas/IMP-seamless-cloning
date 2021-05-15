@@ -139,7 +139,7 @@ def relpath(filename):
     return os.path.join(os.path.dirname(__file__), filename)
 
 
-def _plot(im1, im2, mask, im_blend, title=''):
+def plot(im1, im2, mask, im_blend, title='Pyramid Blending'):
     plt.figure(title)
 
     plt.subplot(141)
@@ -160,22 +160,25 @@ def _plot(im1, im2, mask, im_blend, title=''):
 
     plt.show()
 
+    plt.imshow(im_blend)
+    plt.show()
 
-def blending_example1():
+
+def pyramid_blending_example1():
     im1 = read_image(relpath('external/blend-1.jpg'), 2)
     im2 = read_image(relpath('external/main-1.jpg'), 2)
     mask = read_image(relpath('external/mask-1.jpg'), 1)
     mask = np.round(mask).astype(np.bool)
     im_blend = _blend_rgb(im1, im2, mask, 13, 3, 5)
-    _plot(im1, im2, mask, im_blend, 'Hired in NASA')
+    plot(im1, im2, mask, im_blend, 'Hired in NASA')
     return im1, im2, mask, im_blend
 
 
-def blending_example2():
+def pyramid_blending_example2():
     im1 = read_image(relpath('external/blend-2.jpg'), 2)
     im2 = read_image(relpath('external/main-2.jpg'), 2)
     mask = read_image(relpath('external/mask-2.jpg'), 1)
     mask = np.round(mask).astype(np.bool)
     im_blend = _blend_rgb(im1, im2, mask, 13, 3, 3)
-    _plot(im1, im2, mask, im_blend, 'Lava Under The Bridge - Haifa')
+    plot(im1, im2, mask, im_blend, 'Lava Under The Bridge - Haifa')
     return im1, im2, mask, im_blend

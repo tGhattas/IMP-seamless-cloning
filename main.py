@@ -1,8 +1,9 @@
-from utils import read_image, blending_example1
+from utils import read_image, pyramid_blending_example1, plot
 from scipy.ndimage.filters import convolve
 from scipy.sparse import coo_matrix, dok_matrix, lil_matrix, block_diag, identity
 from scipy.sparse.linalg import spsolve
 from scipy import ndimage
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -162,32 +163,43 @@ def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_
     mask = mask > 0.1
     mask = mask.astype('uint8')
     result = np.zeros_like(target, dtype='uint8')
-    for channel in range(len('RGB')):
+    for channel in tqdm(range(len('RGB')), desc='seamless cloning RGB'):
         result[..., channel] = seamless_cloning_single_channel(source[..., channel], target[..., channel], mask, offset,
                                                                    gradient_field_source_only)
 
     return result
 
 
-if __name__ == '__main__':
-    # target = read_image('./external/main-1.jpg', 2)
-    # source = read_image('./external/blend-1.jpg', 2)
-    # mask = read_image('./external/mask-1.jpg', 1)
+def poisson_blending_example1(monochromatic_source=True):
+    target = read_image('./external/main-1.jpg', 2)
+    # make source monochromatic to avoid color darkening in results
+    source = read_image('./external/blend-1.jpg', 1)
+    if monochromatic_source:
+        mono_source = np.zeros(source.shape+(3,), dtype=np.float64)
+        for _ in range(len('RGB')):
+            mono_source[..., _] = source
+        source = mono_source
+    mask = read_image('./external/mask-1.jpg', 1)
+    offset = (0, 0)
+    cloned = seamless_cloning(source, target, mask, offset=offset)
+    plt.imshow(cloned), plt.show()
+    plot(source, target, mask, cloned, title='Possion Based Blending 1')
 
+
+def poisson_blending_example2():
     target = read_image('./external/target1.jpg', 2)
     source = read_image('./external/source1.jpg', 2)
     mask = read_image('./external/mask1.png', 1)
-
-    # target_g = read_image('./external/main-1.jpg', 1)
-    # source_g = read_image('./external/blend-1.jpg', 1)
-    # cloned_single = seamless_cloning_single_channel(source_g, target_g, mask)
-    # plt.imshow(cloned_single), plt.show()
     offset = (0, 66)
     cloned = seamless_cloning(source, target, mask, offset=offset)
     plt.imshow(cloned), plt.show()
-    # basic = target.copy()
-    # basic[mask>0.1] = source[mask>0.1]
-    # plt.imshow(basic), plt.show()#, cmap=plt.cm.gray
-    # blending_example1()
+    plot(source, target, mask, cloned, title='Possion Based Blending 2')
+
+
+if __name__ == '__main__':
+
+    poisson_blending_example1()
+    poisson_blending_example1(monochromatic_source=True)
+    pyramid_blending_example1()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
