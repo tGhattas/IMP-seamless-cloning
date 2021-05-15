@@ -170,6 +170,18 @@ def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_
     return result
 
 
+def convolution_pyramids_single_channel(source, target, mask, offset, F):
+    """
+    :param source:
+    :param target:
+    :param mask:
+    :param offset:
+    :param F:
+    :return:
+    """
+    pass
+
+
 def poisson_blending_example1(monochromatic_source=True):
     target = read_image('./external/main-1.jpg', 2)
     # make source monochromatic to avoid color darkening in results
