@@ -1,7 +1,8 @@
-from utils import read_image, pyramid_blending_example1, plot
+from utils import read_image, pyramid_blending_example1, plot, plt
 from scipy.ndimage.filters import convolve
 from scipy.sparse import lil_matrix, block_diag
 from scipy.sparse.linalg import spsolve
+from numpy.linalg import solve
 from scipy.ndimage.morphology import distance_transform_edt
 from scipy import ndimage, fft
 from tqdm import tqdm
@@ -79,7 +80,8 @@ def apply_offset(offset, source, target, mask):
     :param mask:
     :return:
     """
-    y_max, x_max = target.shape
+    # y_max, x_max = target.shape #TODO
+    y_max, x_max = mask.shape
     y_min, x_min = 0, 0
 
     x_range = x_max - x_min
@@ -204,7 +206,6 @@ def shepards_single_channel(source, target, mask, offset, F):
     :param F: kernel to use in Shepard's interpolation
     :return:
     """
-    source, mask, y_max, x_max, y_min, x_min, x_range, y_range = apply_offset(offset, source, target, mask)
 
     difference = target - source
     boundary = get_omega_boundary(mask)
@@ -218,6 +219,7 @@ def shepards_single_channel(source, target, mask, offset, F):
     mask = mask > 0
     blend[mask] = temp[mask]
     blend = (blend.clip(0, 1) * 255).astype('uint8')
+    blend = blend.reshape(target.shape)
     return blend
 
 
@@ -233,9 +235,14 @@ def shepards_seamless_cloning(source, target, mask, offset, F):
     """
     mask = mask > 0.1
     mask = mask.astype('uint8')
+    source, mask, y_max, x_max, y_min, x_min, x_range, y_range = apply_offset(offset, source, target, mask)
+    source = source[y_min:y_max, x_min:x_max]
+    target = target[y_min:y_max, x_min:x_max]
+    mask = mask[y_min:y_max, x_min:x_max]
     result = np.zeros_like(target, dtype='uint8')
     for channel in tqdm(range(len('RGB')), desc="Shepard's seamless cloning RGB"):
-        result[..., channel] = shepards_single_channel(source[..., channel], target[..., channel], mask, offset, F)
+        tmp = shepards_single_channel(source[..., channel], target[..., channel], mask, offset, F)
+        result[..., channel] = tmp.reshape(mask.shape)
 
     return result
 
@@ -260,6 +267,17 @@ def shepards_blending_example2():
     F = create_mask_dist_transform(mask)
     cloned = shepards_seamless_cloning(source, target, mask, offset, F)
     plot(source, target, mask, cloned, title="Shepard's Based Blending 2")
+
+
+def shepards_blending_example3():
+    target = read_image('./external/omer-t.jpg', 2)
+    source = read_image('./external/omer-s.jpg', 2)
+    mask = read_image('./external/omer-mm.jpg', 1)
+    mask = mask > 0.1
+    offset = (0, 66)
+    F = create_mask_dist_transform(mask)
+    cloned = shepards_seamless_cloning(source, target, mask, offset, F)
+    plot(source, target, mask, cloned, title="Shepard's Based Blending OMER")
 
 
 def poisson_blending_example1(monochromatic_source=True):
@@ -288,18 +306,34 @@ def poisson_blending_example2():
     plot(source, target, mask, cloned, title='Possion Based Blending 2')
 
 
+def poisson_blending_example3():
+    target = read_image('./external/omer-t.jpg', 2)
+    source = read_image('./external/omer-s.jpg', 2)
+    mask = read_image('./external/omer-mm.jpg', 1)
+    offset = (0, 66)
+    cloned = seamless_cloning(source, target, mask, offset=offset)
+    plot(source, target, mask, cloned, title='Possion Based Blending 3')
+
+
 if __name__ == '__main__':
     shepards_blending_example1()
     shepards_blending_example2()
+    shepards_blending_example3()
 
     poisson_blending_example1()
     poisson_blending_example2()
-
+    poisson_blending_example3()
+    #
     poisson_blending_example1(monochromatic_source=False)
     pyramid_blending_example1()
 
 '''
-Running times:
+Note on running times:
+    Shepard's based convolution uses cv2.Filter2d which uses the frequency domain to apply the filter, therefore the 
+    time complexity of the blending is bound by O(NlogN) where N is the number of pixels.
+    However, in Possion based solver, it bulds the blend by solving a sparse linear equation using multifrontal LU
+    factorization
+     
     Shepard's seamless cloning RGB: 100%|██████████| 3/3 [00:00<00:00,  8.56it/s]
     Possion seamless cloning RGB: 100%|██████████| 3/3 [03:36<00:00, 72.16s/it]
 '''
