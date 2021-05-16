@@ -167,7 +167,6 @@ def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_
     for channel in tqdm(range(len('RGB')), desc='Possion seamless cloning RGB'):
         result[..., channel] = seamless_cloning_single_channel(source[..., channel], target[..., channel], mask, offset,
                                                                    gradient_field_source_only)
-
     return result
 
 
@@ -183,6 +182,7 @@ def create_mask_dist_transform(mask):
     kernel = distance_transform_edt(kernel)
     kernel = 1 / ((kernel + 0.1) ** 3)
     return kernel
+
 
 def apply_filter_fft(image, kernel):
     ft_image = fft.fft2(image)
@@ -217,7 +217,7 @@ def shepards_single_channel(source, target, mask, offset, F):
     return blend
 
 
-def shepards_seamless_cloning(source, target, mask, offset=(0, 0), F):
+def shepards_seamless_cloning(source, target, mask, offset, F):
     """
     Based on Poisson solver
     :param source:
@@ -230,7 +230,6 @@ def shepards_seamless_cloning(source, target, mask, offset=(0, 0), F):
     mask = mask > 0.1
     mask = mask.astype('uint8')
     result = np.zeros_like(target, dtype='uint8')
-    F = create_mask_dist_transform(mask)
     for channel in tqdm(range(len('RGB')), desc="Shepard's seamless cloning RGB"):
         result[..., channel] = shepards_single_channel(source[..., channel], target[..., channel], mask, offset, F)
 
@@ -242,7 +241,9 @@ def shepards_blending_example1():
     source = read_image('./external/blend-1.jpg', 2)
     mask = read_image('./external/mask-1.jpg', 1)
     offset = (0, 0)
-    cloned = shepards_seamless_cloning(source, target, mask, offset, None)
+    mask = mask > 0.1
+    F = create_mask_dist_transform(mask)
+    cloned = shepards_seamless_cloning(source, target, mask, offset, F)
     plt.imshow(cloned), plt.show()
     plot(source, target, mask, cloned, title="Shepard's Based Blending 1")
 
