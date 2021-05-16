@@ -1,8 +1,9 @@
 from utils import read_image, pyramid_blending_example1, plot
 from scipy.ndimage.filters import convolve
-from scipy.sparse import coo_matrix, dok_matrix, lil_matrix, block_diag, identity
+from scipy.sparse import lil_matrix, block_diag
 from scipy.sparse.linalg import spsolve
-from scipy import ndimage
+from scipy.ndimage.morphology import distance_transform_edt
+from scipy import ndimage, fft, signal
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
@@ -152,7 +153,7 @@ def seamless_cloning_single_channel(source, target, mask, offset, gradient_field
 
 def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_only=True):
     """
-
+    Based on Poisson solver
     :param source:
     :param target:
     :param mask:
@@ -163,15 +164,35 @@ def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_
     mask = mask > 0.1
     mask = mask.astype('uint8')
     result = np.zeros_like(target, dtype='uint8')
-    for channel in tqdm(range(len('RGB')), desc='seamless cloning RGB'):
+    for channel in tqdm(range(len('RGB')), desc='Possion seamless cloning RGB'):
         result[..., channel] = seamless_cloning_single_channel(source[..., channel], target[..., channel], mask, offset,
                                                                    gradient_field_source_only)
 
     return result
 
 
-def convolution_pyramids_single_channel(source, target, mask, offset, F):
+def create_mask_dist_transform(mask):
     """
+    Creates a Shepard's interpolation kernel
+    :param mask: binary mask
+    :return: kernel
+    """
+    sm = mask.shape
+    kernel = np.ones_like(mask, dtype='float64')
+    kernel[round(sm[0] / 2), round(sm[1] / 2)] = 0.0
+    kernel = distance_transform_edt(kernel)
+    kernel = 1 / ((kernel + 0.1) ** 3)
+    return kernel
+
+def apply_filter_fft(image, kernel):
+    ft_image = fft.fft2(image)
+    ft_image = signal.convolve2d(ft_image, kernel, mode='same')
+    return fft.ifft2(ft_image).real
+
+
+def shepards_single_channel(source, target, mask, offset, F):
+    """
+    code for Convolution Pyramid. link: https://www.cs.huji.ac.il/labs/cglab/projects/convpyr/
     :param source:
     :param target:
     :param mask:
@@ -179,18 +200,64 @@ def convolution_pyramids_single_channel(source, target, mask, offset, F):
     :param F:
     :return:
     """
-    pass
+    source, mask, y_max, x_max, y_min, x_min, x_range, y_range = apply_offset(offset, source, target, mask)
+
+    difference = target - source
+    boundary = get_omega_boundary(mask)
+    difference[boundary == 0] = 0
+    # Shepard Interpolation Convolution
+    filtered_diff = apply_filter_fft(difference, F)
+    filtered_boundary = apply_filter_fft(boundary, F)
+    temp = filtered_diff / filtered_boundary + source
+
+    blend = target.copy()
+    mask = mask > 0
+    blend[mask] = temp[mask]
+    blend = (blend.clip(0, 1) * 255).astype('uint8')
+    return blend
+
+
+def shepards_seamless_cloning(source, target, mask, offset=(0, 0), F):
+    """
+    Based on Poisson solver
+    :param source:
+    :param target:
+    :param mask:
+    :param offset:
+    :param gradient_field_source_only:
+    :return:
+    """
+    mask = mask > 0.1
+    mask = mask.astype('uint8')
+    result = np.zeros_like(target, dtype='uint8')
+    F = create_mask_dist_transform(mask)
+    for channel in tqdm(range(len('RGB')), desc="Shepard's seamless cloning RGB"):
+        result[..., channel] = shepards_single_channel(source[..., channel], target[..., channel], mask, offset, F)
+
+    return result
+
+
+def shepards_blending_example1():
+    target = read_image('./external/main-1.jpg', 2)
+    source = read_image('./external/blend-1.jpg', 2)
+    mask = read_image('./external/mask-1.jpg', 1)
+    offset = (0, 0)
+    cloned = shepards_seamless_cloning(source, target, mask, offset, None)
+    plt.imshow(cloned), plt.show()
+    plot(source, target, mask, cloned, title="Shepard's Based Blending 1")
 
 
 def poisson_blending_example1(monochromatic_source=True):
     target = read_image('./external/main-1.jpg', 2)
     # make source monochromatic to avoid color darkening in results
-    source = read_image('./external/blend-1.jpg', 1)
     if monochromatic_source:
+        source = read_image('./external/blend-1.jpg', 1)
         mono_source = np.zeros(source.shape+(3,), dtype=np.float64)
         for _ in range(len('RGB')):
             mono_source[..., _] = source
         source = mono_source
+    else:
+        source = read_image('./external/blend-1.jpg', 2)
     mask = read_image('./external/mask-1.jpg', 1)
     offset = (0, 0)
     cloned = seamless_cloning(source, target, mask, offset=offset)
@@ -209,9 +276,9 @@ def poisson_blending_example2():
 
 
 if __name__ == '__main__':
-
-    poisson_blending_example1()
-    poisson_blending_example1(monochromatic_source=True)
-    pyramid_blending_example1()
+    shepards_blending_example1()
+    # poisson_blending_example1()
+    # poisson_blending_example1(monochromatic_source=False)
+    # pyramid_blending_example1()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
