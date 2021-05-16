@@ -3,7 +3,7 @@ import imageio
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import os
-
+from tqdm import tqdm
 from scipy.ndimage.filters import convolve
 from skimage.color import rgb2gray
 
@@ -129,8 +129,8 @@ def pyramid_blending(im1, im2, mask, max_levels, filter_size_im, filter_size_mas
 
 def _blend_rgb(im1, im2, mask, max_levels, filter_size_im, filter_size_mask):
     blend = np.zeros_like(im1)
-    for i in range(len('RGB')):
-        blend[:, :, i] = pyramid_blending(im1[:, :, i], im2[:, :, i], mask, max_levels, filter_size_im,
+    for i in tqdm(range(len('RGB')), desc="Pyramid blending RGB"):
+        blend[:, :, i] = pyramid_blending(im1[..., i], im2[..., i], mask, max_levels, filter_size_im,
                                           filter_size_mask)
     return blend
 
@@ -139,15 +139,15 @@ def relpath(filename):
     return os.path.join(os.path.dirname(__file__), filename)
 
 
-def plot(im1, im2, mask, im_blend, title='Pyramid Blending'):
+def plot(im1, im2, mask, im_blend, title='Pyramid Blending', cmap=None):
     plt.figure(title)
 
     plt.subplot(141)
-    plt.imshow(im1)
+    plt.imshow(im1, cmap=cmap)
     plt.title('Image 1')
 
     plt.subplot(142)
-    plt.imshow(im2)
+    plt.imshow(im2, cmap=cmap)
     plt.title('Image 2')
 
     plt.subplot(143)
@@ -155,12 +155,12 @@ def plot(im1, im2, mask, im_blend, title='Pyramid Blending'):
     plt.title('Mask')
 
     plt.subplot(144)
-    plt.imshow(im_blend)
+    plt.imshow(im_blend, cmap=cmap)
     plt.title('Blend')
 
     plt.show()
 
-    plt.imshow(im_blend)
+    plt.imshow(im_blend, cmap=cmap)
     plt.show()
 
 
@@ -170,7 +170,7 @@ def pyramid_blending_example1():
     mask = read_image(relpath('external/mask-1.jpg'), 1)
     mask = np.round(mask).astype(np.bool)
     im_blend = _blend_rgb(im1, im2, mask, 13, 3, 5)
-    plot(im1, im2, mask, im_blend, 'Hired in NASA')
+    plot(im1, im2, mask, im_blend, 'Pyramid Blending - Hired in NASA')
     return im1, im2, mask, im_blend
 
 
@@ -180,5 +180,5 @@ def pyramid_blending_example2():
     mask = read_image(relpath('external/mask-2.jpg'), 1)
     mask = np.round(mask).astype(np.bool)
     im_blend = _blend_rgb(im1, im2, mask, 13, 3, 3)
-    plot(im1, im2, mask, im_blend, 'Lava Under The Bridge - Haifa')
+    plot(im1, im2, mask, im_blend, 'Pyramid Blending - Lava Under The Bridge - Haifa')
     return im1, im2, mask, im_blend

@@ -115,7 +115,7 @@ def get_laplacian_mat(n, m):
     return mat_A
 
 
-def seamless_cloning_single_channel(source, target, mask, offset, gradient_field_source_only=True):
+def seamless_cloning_single_channel(source, target, mask, offset, gradient_field_source_only):
     """
     :param source:
     :param target:
@@ -184,10 +184,14 @@ def create_mask_dist_transform(mask):
     return kernel
 
 
-def apply_filter_fft(image, kernel):
-    ft_image = fft.fft2(image)
-    ft_image = signal.convolve2d(ft_image, kernel, mode='same')
-    return fft.ifft2(ft_image).real
+def apply_filter(image, kernel, in_freq_domain=False):
+    if in_freq_domain:
+        ft_kernel = fft.fft2(kernel)
+        ft_image = fft.fft2(image)
+        ft_image = ft_image * ft_kernel
+        return fft.ifft2(ft_image).real
+    else:
+        return cv2.filter2D(image, -1, kernel)
 
 
 def shepards_single_channel(source, target, mask, offset, F):
@@ -206,8 +210,8 @@ def shepards_single_channel(source, target, mask, offset, F):
     boundary = get_omega_boundary(mask)
     difference[boundary == 0] = 0
     # Shepard Interpolation Convolution
-    filtered_diff = apply_filter_fft(difference, F)
-    filtered_boundary = apply_filter_fft(boundary, F)
+    filtered_diff = apply_filter(difference, F)
+    filtered_boundary = apply_filter(boundary, F)
     temp = filtered_diff / filtered_boundary + source
 
     blend = target.copy()
@@ -244,8 +248,18 @@ def shepards_blending_example1():
     mask = mask > 0.1
     F = create_mask_dist_transform(mask)
     cloned = shepards_seamless_cloning(source, target, mask, offset, F)
-    plt.imshow(cloned), plt.show()
     plot(source, target, mask, cloned, title="Shepard's Based Blending 1")
+
+
+def shepards_blending_example2():
+    target = read_image('./external/target1.jpg', 2)
+    source = read_image('./external/source1.jpg', 2)
+    mask = read_image('./external/mask1.png', 1)
+    mask = mask > 0.1
+    offset = (0, 66)
+    F = create_mask_dist_transform(mask)
+    cloned = shepards_seamless_cloning(source, target, mask, offset, F)
+    plot(source, target, mask, cloned, title="Shepard's Based Blending 2")
 
 
 def poisson_blending_example1(monochromatic_source=True):
@@ -262,7 +276,6 @@ def poisson_blending_example1(monochromatic_source=True):
     mask = read_image('./external/mask-1.jpg', 1)
     offset = (0, 0)
     cloned = seamless_cloning(source, target, mask, offset=offset)
-    plt.imshow(cloned), plt.show()
     plot(source, target, mask, cloned, title='Possion Based Blending 1')
 
 
@@ -272,14 +285,17 @@ def poisson_blending_example2():
     mask = read_image('./external/mask1.png', 1)
     offset = (0, 66)
     cloned = seamless_cloning(source, target, mask, offset=offset)
-    plt.imshow(cloned), plt.show()
     plot(source, target, mask, cloned, title='Possion Based Blending 2')
 
 
 if __name__ == '__main__':
     shepards_blending_example1()
-    # poisson_blending_example1()
-    # poisson_blending_example1(monochromatic_source=False)
-    # pyramid_blending_example1()
+    shepards_blending_example2()
+
+    poisson_blending_example1()
+    poisson_blending_example2()
+
+    poisson_blending_example1(monochromatic_source=False)
+    pyramid_blending_example1()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
