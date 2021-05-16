@@ -195,12 +195,12 @@ def apply_filter(image, kernel, in_freq_domain=False):
 
 def shepards_single_channel(source, target, mask, offset, F):
     """
-    code for Convolution Pyramid. link: https://www.cs.huji.ac.il/labs/cglab/projects/convpyr/
+    Based on code for Convolution Pyramid. link: https://www.cs.huji.ac.il/labs/cglab/projects/convpyr/
     :param source:
     :param target:
-    :param mask:
-    :param offset:
-    :param F:
+    :param mask: binary mask
+    :param offset: tuple of size 2 representing the offset
+    :param F: kernel to use in Shepard's interpolation
     :return:
     """
     source, mask, y_max, x_max, y_min, x_min, x_range, y_range = apply_offset(offset, source, target, mask)
@@ -225,9 +225,9 @@ def shepards_seamless_cloning(source, target, mask, offset, F):
     Based on Poisson solver
     :param source:
     :param target:
-    :param mask:
-    :param offset:
-    :param gradient_field_source_only:
+    :param mask: binary mask
+    :param offset: tuple of size 2 representing the offset
+    :param F: kernel to use in Shepard's interpolation
     :return:
     """
     mask = mask > 0.1
@@ -296,4 +296,10 @@ if __name__ == '__main__':
 
     poisson_blending_example1(monochromatic_source=False)
     pyramid_blending_example1()
+
+'''
+Running times:
+    Shepard's seamless cloning RGB: 100%|██████████| 3/3 [00:00<00:00,  8.56it/s]
+    Possion seamless cloning RGB: 100%|██████████| 3/3 [03:36<00:00, 72.16s/it]
+'''
 
