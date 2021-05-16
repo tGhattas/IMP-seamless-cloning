@@ -3,9 +3,8 @@ from scipy.ndimage.filters import convolve
 from scipy.sparse import lil_matrix, block_diag
 from scipy.sparse.linalg import spsolve
 from scipy.ndimage.morphology import distance_transform_edt
-from scipy import ndimage, fft, signal
+from scipy import ndimage, fft
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
@@ -298,4 +297,3 @@ if __name__ == '__main__':
     poisson_blending_example1(monochromatic_source=False)
     pyramid_blending_example1()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
