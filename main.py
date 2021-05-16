@@ -80,8 +80,7 @@ def apply_offset(offset, source, target, mask):
     :param mask:
     :return:
     """
-    # y_max, x_max = target.shape #TODO
-    y_max, x_max = mask.shape
+    y_max, x_max = target.shape
     y_min, x_min = 0, 0
 
     x_range = x_max - x_min
