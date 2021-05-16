@@ -195,7 +195,8 @@ def apply_filter(image, kernel, in_freq_domain=False):
 
 def shepards_single_channel(source, target, mask, offset, F):
     """
-    Based on code for Convolution Pyramid. link: https://www.cs.huji.ac.il/labs/cglab/projects/convpyr/
+    Based on code for "Convolution Pyramid" - Farbman et al.
+    link: https://www.cs.huji.ac.il/labs/cglab/projects/convpyr/
     :param source:
     :param target:
     :param mask: binary mask
