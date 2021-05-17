@@ -322,7 +322,7 @@ if __name__ == '__main__':
     poisson_blending_example1()
     poisson_blending_example2()
     poisson_blending_example3()
-    #
+
     poisson_blending_example1(monochromatic_source=False)
     pyramid_blending_example1()
 
@@ -330,7 +330,7 @@ if __name__ == '__main__':
 Note on running times:
     Shepard's based convolution uses cv2.Filter2d which uses the frequency domain to apply the filter, therefore the 
     time complexity of the blending is bound by O(NlogN) where N is the number of pixels.
-    However, in Possion based solver, it bulds the blend by solving a sparse linear equation using multifrontal LU
+    However, in Possion based solver, it builds the blend by solving a sparse linear equation using multifrontal LU
     factorization
      
     Shepard's seamless cloning RGB: 100%|██████████| 3/3 [00:00<00:00,  8.56it/s]
