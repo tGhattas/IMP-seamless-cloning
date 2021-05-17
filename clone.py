@@ -2,7 +2,6 @@ from utils import read_image, pyramid_blending_example1, plot, plt
 from scipy.ndimage.filters import convolve
 from scipy.sparse import lil_matrix, block_diag
 from scipy.sparse.linalg import spsolve
-from numpy.linalg import solve
 from scipy.ndimage.morphology import distance_transform_edt
 from scipy import ndimage, fft
 from tqdm import tqdm
