@@ -331,9 +331,10 @@ Note on running times:
     Shepard's based convolution uses cv2.Filter2d which uses the frequency domain to apply the filter, therefore the 
     time complexity of the blending is bound by O(NlogN) where N is the number of pixels.
     However, in Possion based solver, it builds the blend by solving a sparse linear equation using multifrontal LU
-    factorization
-     
+    factorization.
+    
+     On Macbook Pro mid 14, intel i5:
     Shepard's seamless cloning RGB: 100%|██████████| 3/3 [00:00<00:00,  8.56it/s]
-    Possion seamless cloning RGB: 100%|██████████| 3/3 [03:36<00:00, 72.16s/it]
+    Poisson seamless cloning RGB: 100%|██████████| 3/3 [03:36<00:00, 72.16s/it]
 '''
 
