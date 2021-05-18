@@ -69,13 +69,15 @@ def poisson_blending_example3():
     plot(source, target, mask, cloned, title='Possion Based Blending 3')
 
 
-def poisson_blending_example3_coarse_mask():
+def poisson_blending_example3_coarse_mask(gradient_field_source_only=False):
     target = read_image('./external/target3.jpg', 2)
     source = read_image('./external/source3.jpg', 2)
     mask = read_image('./external/mask-3-coarse.jpg', 1)
     offset = (0, 0)
-    cloned = seamless_cloning(source, target, mask, offset=offset)
-    plot(source, target, mask, cloned, title='Possion Based Blending coarse 3')
+    cloned = seamless_cloning(source, target, mask, offset=offset,
+                              gradient_field_source_only=gradient_field_source_only)
+    plot(source, target, mask, cloned,
+         title='Possion Based Blending coarse 3 - grad field flag %s' % gradient_field_source_only)
 
 
 def shaprds_blending_example3_coarse_mask():
@@ -91,12 +93,12 @@ if __name__ == '__main__':
     # shepards_blending_example1()
     # shepards_blending_example2()
     # shepards_blending_example3()
-    shaprds_blending_example3_coarse_mask()
+    # shaprds_blending_example3_coarse_mask()
     #
     # poisson_blending_example1()
     # poisson_blending_example2()
     # poisson_blending_example3()
-    # poisson_blending_example3_coarse_mask()
+    poisson_blending_example3_coarse_mask()
 
     # poisson_blending_example1(monochromatic_source=True)
     # pyramid_blending_example1()

@@ -114,6 +114,18 @@ def get_laplacian_mat(n, m):
     return mat_A
 
 
+def get_grad_magnitude(img):
+    """
+    returns the magnitude in float 64
+    :param img:
+    :return:
+    """
+    sobelx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=5)
+    sobely = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=5)
+    mag = sobelx**2 + sobely**2
+    return mag
+
+
 def seamless_cloning_single_channel(source, target, mask, offset, gradient_field_source_only):
     """
     :param source:
@@ -132,8 +144,16 @@ def seamless_cloning_single_channel(source, target, mask, offset, gradient_field
 
     eq_left_sys = laplacian.tocsc()
 
-    # inside f
-    eq_right = laplacian.dot(flat_source)
+    if gradient_field_source_only:
+        # inside f
+        eq_right = laplacian.dot(flat_source)
+    else:
+        # corresponding to vector field from equation (11) in the paper.
+        grad_g = get_grad_magnitude(source)
+        grad_f_star = get_grad_magnitude(target)
+        cond = np.abs(grad_f_star) > np.abs(grad_g)
+        eq_right = np.where(cond, target, source)
+        eq_right = laplacian.dot(eq_right.flatten())
 
     flat_eq_right = eq_right.flatten()
 

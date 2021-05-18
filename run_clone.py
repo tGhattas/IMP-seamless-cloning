@@ -15,7 +15,8 @@ def usage():
         \t-s\t(Required) Specify a source image.\n\
         \t-t\t(Required) Specify a target image.\n\
         \t-m\t(Optional) Specify a mask image with the object in white and other part in black, ignore this option if you plan to draw it later.\n\
-        \t-x\t(Optional) Flag to specify a mode, either 'possion' or 'shepard'. default is possion.")
+        \t-x\t(Optional) Flag to specify a mode, either 'possion' or 'shepard'. default is possion.\n\
+        \t-v\t(Optional) Flag to specify grad field of source only or both in case of Possion solver is used. default is source only.")
 
 
 if __name__ == '__main__':
@@ -23,7 +24,7 @@ if __name__ == '__main__':
     args = {}
 
     try:
-        opts, _ = getopt.getopt(sys.argv[1:], "xhs:t:m:p:")
+        opts, _ = getopt.getopt(sys.argv[1:], "vxhs:t:m:p:")
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -41,6 +42,8 @@ if __name__ == '__main__':
             args["mask"] = a
         elif o in ("-x"):
             args["mode"] = a.lower()
+        elif o in ("-v"):
+            args["gradient_field_source_only"] = a
         else:
             continue
 
@@ -52,6 +55,7 @@ if __name__ == '__main__':
     #
     # set default mode to Possion solver
     mode = "possion" if ("mode" not in args) else args["mode"]
+    gradient_field_source_only = ("gradient_field_source_only" not in args)
 
     source = read_image(args["source"], 2)
     target = read_image(args["target"], 2)
@@ -84,7 +88,8 @@ if __name__ == '__main__':
     offset = offset_x, offset_y
 
     cloning_tool = seamless_cloning if mode == "possion" else shepards_seamless_cloning
-    blend_result = cloning_tool(source, target, target_mask, offset)
+    kwargs = {"gradient_field_source_only": gradient_field_source_only} if mode == "possion" else {}
+    blend_result = cloning_tool(source, target, target_mask, offset, **kwargs)
 
     cv2.imwrite(path.join(path.dirname(args["source"]), 'target_result.png'),
                 blend_result)
