@@ -142,19 +142,19 @@ def relpath(filename):
 def plot(im1, im2, mask, im_blend, title='Pyramid Blending', cmap=None):
     plt.figure(title)
 
-    plt.subplot(141)
+    plt.subplot(221)
     plt.imshow(im1, cmap=cmap)
     plt.title('Image 1')
 
-    plt.subplot(142)
+    plt.subplot(222)
     plt.imshow(im2, cmap=cmap)
     plt.title('Image 2')
 
-    plt.subplot(143)
+    plt.subplot(223)
     plt.imshow(mask, cmap=cm.gray)
     plt.title('Mask')
 
-    plt.subplot(144)
+    plt.subplot(224)
     plt.imshow(im_blend, cmap=cmap)
     plt.title('Blend')
 

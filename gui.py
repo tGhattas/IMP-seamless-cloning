@@ -27,7 +27,7 @@ class MaskPainter:
             if self.to_draw:
                 cv2.rectangle(self.image, (x - self.size, y - self.size),
                               (x + self.size, y + self.size),
-                              (0, 255, 0), -1)
+                              (0, 115, 255), -1)
                 cv2.rectangle(self.mask, (x - self.size, y - self.size),
                               (x + self.size, y + self.size),
                               (255, 255, 255), -1)
@@ -36,10 +36,16 @@ class MaskPainter:
         elif event == cv2.EVENT_LBUTTONUP:
             self.to_draw = False
 
+    def _on_trackbar(self, val):
+        self.size = val
+
     def paint_mask(self):
         cv2.namedWindow(self.window_name)
         cv2.setMouseCallback(self.window_name,
                              self._paint_mask_handler)
+
+        trackbar_name = 'Brush Size'
+        cv2.createTrackbar(trackbar_name, self.window_name, 4, 100, self._on_trackbar)
 
         while True:
             cv2.imshow(self.window_name, self.image)
@@ -69,6 +75,19 @@ class MaskPainter:
         # close all open windows
         cv2.destroyAllWindows()
         return maskPath
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class MaskMover:
@@ -147,7 +166,7 @@ class MaskMover:
         cv2.imshow("Press any key to save the mask", roi)
         cv2.waitKey(0)
         new_mask_path = path.join(path.dirname(self.image_path),
-                                  'target_mask.png')
+                                  'target-mask.png')
         cv2.imwrite(new_mask_path, self.mask)
 
         # close all open windows

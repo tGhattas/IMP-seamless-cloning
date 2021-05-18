@@ -270,11 +270,11 @@ def shepards_blending_example2():
 
 
 def shepards_blending_example3():
-    target = read_image('./external/omer-t.jpg', 2)
-    source = read_image('./external/omer-s.jpg', 2)
-    mask = read_image('./external/omer-mm.jpg', 1)
+    target = read_image('./external/target3.jpg', 2)
+    source = read_image('./external/source3.jpg', 2)
+    mask = read_image('./external/mask3-drawn.jpeg', 1)
     mask = mask > 0.1
-    offset = (0, 66)
+    offset = (0, 0)
     F = create_mask_dist_transform(mask)
     cloned = shepards_seamless_cloning(source, target, mask, offset, F)
     plot(source, target, mask, cloned, title="Shepard's Based Blending OMER")
@@ -307,9 +307,9 @@ def poisson_blending_example2():
 
 
 def poisson_blending_example3():
-    target = read_image('./external/omer-t.jpg', 2)
-    source = read_image('./external/omer-s.jpg', 2)
-    mask = read_image('./external/omer-mm.jpg', 1)
+    target = read_image('./external/target3.jpg', 2)
+    source = read_image('./external/source3.jpg', 2)
+    mask = read_image('./external/mask3-drawn.jpeg', 1)
     offset = (0, 66)
     cloned = seamless_cloning(source, target, mask, offset=offset)
     plot(source, target, mask, cloned, title='Possion Based Blending 3')
@@ -317,15 +317,15 @@ def poisson_blending_example3():
 
 if __name__ == '__main__':
     shepards_blending_example1()
-    shepards_blending_example2()
-    shepards_blending_example3()
-
+    # shepards_blending_example2()
+    # shepards_blending_example3()
+    #
     poisson_blending_example1()
-    poisson_blending_example2()
-    poisson_blending_example3()
+    # poisson_blending_example2()
+    # poisson_blending_example3()
 
-    poisson_blending_example1(monochromatic_source=False)
-    pyramid_blending_example1()
+    # poisson_blending_example1(monochromatic_source=False)
+    # pyramid_blending_example1()
 
 '''
 Note on running times:
