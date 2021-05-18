@@ -90,15 +90,15 @@ def shaprds_blending_example3_coarse_mask():
 
 
 if __name__ == '__main__':
-    # shepards_blending_example1()
-    # shepards_blending_example2()
-    # shepards_blending_example3()
-    # shaprds_blending_example3_coarse_mask()
-    #
-    # poisson_blending_example1()
-    # poisson_blending_example2()
-    # poisson_blending_example3()
+    shepards_blending_example1()
+    shepards_blending_example2()
+    shepards_blending_example3()
+    shaprds_blending_example3_coarse_mask()
+
+    poisson_blending_example1()
+    poisson_blending_example2()
+    poisson_blending_example3()
     poisson_blending_example3_coarse_mask()
 
-    # poisson_blending_example1(monochromatic_source=True)
-    # pyramid_blending_example1()
+    poisson_blending_example1(monochromatic_source=True)
+    pyramid_blending_example1()
