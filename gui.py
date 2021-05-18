@@ -153,7 +153,7 @@ class MaskMover:
         cv2.imshow("Press any key to save the mask", roi)
         cv2.waitKey(0)
         new_mask_path = path.join(path.dirname(self.image_path),
-                                  'target-mask.png')
+                                  'mask-3-coarse.jpg')
         cv2.imwrite(new_mask_path, self.mask)
 
         # close all open windows
