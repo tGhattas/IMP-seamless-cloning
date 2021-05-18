@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     cv2.imwrite(path.join(path.dirname(args["source"]), 'target_result.png'),
                 blend_result)
-    plt.imshow(blend_result), plt.show()
+    plt.figure("Result"), plt.imshow(blend_result), plt.show()
     print('Done.\n')
 
 

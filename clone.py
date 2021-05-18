@@ -280,7 +280,7 @@ def shepards_blending_example3():
     plot(source, target, mask, cloned, title="Shepard's Based Blending OMER")
 
 
-def poisson_blending_example1(monochromatic_source=True):
+def poisson_blending_example1(monochromatic_source=False):
     target = read_image('./external/main-1.jpg', 2)
     # make source monochromatic to avoid color darkening in results
     if monochromatic_source:
@@ -316,15 +316,15 @@ def poisson_blending_example3():
 
 
 if __name__ == '__main__':
-    shepards_blending_example1()
+    # shepards_blending_example1()
     # shepards_blending_example2()
     # shepards_blending_example3()
     #
-    poisson_blending_example1()
-    # poisson_blending_example2()
+    # poisson_blending_example1()
+    poisson_blending_example2()
     # poisson_blending_example3()
 
-    # poisson_blending_example1(monochromatic_source=False)
+    # poisson_blending_example1(monochromatic_source=True)
     # pyramid_blending_example1()
 
 '''

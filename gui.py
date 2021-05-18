@@ -77,19 +77,6 @@ class MaskPainter:
         return maskPath
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 class MaskMover:
 
     def __init__(self, image_path, mask_path):
