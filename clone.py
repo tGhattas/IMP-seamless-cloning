@@ -120,14 +120,29 @@ def get_grad_magnitude(img):
     :param img:
     :return:
     """
-    sobelx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=5)
-    sobely = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=5)
+    sobelx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=3)
+    sobely = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=3)
     mag = sobelx**2 + sobely**2
     return mag
 
 
-def seamless_cloning_single_channel(source, target, mask, offset, gradient_field_source_only):
+def grad_vector_field_12(source, target):
     """
+    corresponding to vector field from equation (12) in the paper.
+    :param source:
+    :param target:
+    :return:
+    """
+    grad_g = get_grad_magnitude(source)
+    grad_f_star = get_grad_magnitude(target)
+    cond = np.abs(grad_f_star) > np.abs(grad_g)
+    eq_right = np.where(cond, target, source)
+    return eq_right.flatten()
+
+
+def seamless_cloning_single_channel(source, target, mask, offset, gradient_field_source_only, vec_field):
+    """
+    :param vec_field:
     :param source:
     :param target:
     :param mask:
@@ -148,12 +163,10 @@ def seamless_cloning_single_channel(source, target, mask, offset, gradient_field
         # inside f
         eq_right = laplacian.dot(flat_source)
     else:
-        # corresponding to vector field from equation (11) in the paper.
-        grad_g = get_grad_magnitude(source)
-        grad_f_star = get_grad_magnitude(target)
-        cond = np.abs(grad_f_star) > np.abs(grad_g)
-        eq_right = np.where(cond, target, source)
-        eq_right = laplacian.dot(eq_right.flatten())
+        # process using a special vector field.
+        vec_field = grad_vector_field_12 if vec_field is None else vec_field
+        eq_right = vec_field(source, target)
+        eq_right = laplacian.dot(eq_right)
 
     flat_eq_right = eq_right.flatten()
 
@@ -170,9 +183,10 @@ def seamless_cloning_single_channel(source, target, mask, offset, gradient_field
     return blend
 
 
-def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_only=True):
+def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_only=True, vec_field=None):
     """
     Based on Poisson solver
+    :param vec_field:
     :param source:
     :param target:
     :param mask:
@@ -185,7 +199,7 @@ def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_
     result = np.zeros_like(target, dtype='uint8')
     for channel in tqdm(range(len('RGB')), desc='Possion seamless cloning RGB'):
         result[..., channel] = seamless_cloning_single_channel(source[..., channel], target[..., channel], mask, offset,
-                                                                   gradient_field_source_only)
+                                                                   gradient_field_source_only, vec_field)
     return result
 
 
