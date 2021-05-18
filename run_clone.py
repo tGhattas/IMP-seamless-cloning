@@ -3,17 +3,19 @@ import getopt
 import sys
 from gui import MaskPainter, MaskMover
 from clone import seamless_cloning, shepards_seamless_cloning
+from utils import read_image, plt
 from os import path
 
 
-
 def usage():
-    print("Usage: python run_clone.py [options] \n\n\
-    Options: \n\
-    \t-h\tPrint a brief help message and exits..\n\
-    \t-s\t(Required) Specify a source image.\n\
-    \t-t\t(Required) Specify a target image.\n\
-    \t-m\t(Optional) Specify a mask image with the object in white and other part in black, ignore this option if you plan to draw it later.")
+    print(
+        "Usage: python run_clone.py [options] \n\n\
+        Options: \n\
+        \t-h\t Flag to specify a brief help message and exits..\n\
+        \t-s\t(Required) Specify a source image.\n\
+        \t-t\t(Required) Specify a target image.\n\
+        \t-m\t(Optional) Specify a mask image with the object in white and other part in black, ignore this option if you plan to draw it later.\n\
+        \t-x\t(Optional) Flag to specify a mode, either 'possion' or 'shepard'. default is possion.")
 
 
 if __name__ == '__main__':
@@ -21,11 +23,11 @@ if __name__ == '__main__':
     args = {}
 
     try:
-        opts, _ = getopt.getopt(sys.argv[1:], "hs:t:m:p:")
+        opts, _ = getopt.getopt(sys.argv[1:], "xhs:t:m:p:")
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
-        print("See help: main.py -h")
+        print("See help: run_clone.py -h")
         exit(2)
     for o, a in opts:
         if o in ("-h"):
@@ -37,8 +39,10 @@ if __name__ == '__main__':
             args["target"] = a
         elif o in ("-m"):
             args["mask"] = a
+        elif o in ("-x"):
+            args["mode"] = a.lower()
         else:
-            assert False, "unhandled option"
+            continue
 
     #
     if ("source" not in args) or ("target" not in args):
@@ -46,8 +50,11 @@ if __name__ == '__main__':
         exit()
 
     #
-    source = cv2.imread(args["source"])
-    target = cv2.imread(args["target"])
+    # set default mode to Possion solver
+    mode = "possion" if ("mode" not in args) else args["mode"]
+
+    source = read_image(args["source"], 2)
+    target = read_image(args["target"], 2)
 
     if source is None or target is None:
         print('Source or target image not exist.')
@@ -73,12 +80,20 @@ if __name__ == '__main__':
 
     # blend
     print('Blending ...')
-    target_mask = cv2.imread(target_mask_path, cv2.IMREAD_GRAYSCALE)
+    target_mask = read_image(target_mask_path, 1)
     offset = offset_x, offset_y
 
-    poisson_blend_result = seamless_cloning(source, target, target_mask, offset)
-    import pdb; pdb.set_trace()
-    cv2.imwrite(path.join(path.dirname(args["source"]), 'target_result.png'),
-                poisson_blend_result)
+    cloning_tool = seamless_cloning if mode == "possion" else shepards_seamless_cloning
+    blend_result = cloning_tool(source, target, target_mask, offset)
 
+    cv2.imwrite(path.join(path.dirname(args["source"]), 'target_result.png'),
+                blend_result)
+    plt.imshow(blend_result), plt.show()
     print('Done.\n')
+
+
+'''
+running example:
+python run_clone.py -s external/blend-1.jpg -t external/main-1.jpg
+
+'''

@@ -4,7 +4,8 @@ import cv2
 from os import path
 
 
-class MaskPainter():
+class MaskPainter:
+
     def __init__(self, image_path):
         self.image_path = image_path
         self.image = cv2.imread(image_path)
@@ -54,19 +55,20 @@ class MaskPainter():
                 cv2.destroyAllWindows()
                 exit()
 
-        roi = self.mask
-        cv2.imshow("Press any key to save the mask", roi)
-        cv2.waitKey(0)
+        # roi = self.mask
+        # cv2.imshow("Press any key to save the mask", roi)
+        # cv2.waitKey(0)
         maskPath = path.join(path.dirname(self.image_path),
                              'mask.png')
-        cv2.imwrite(maskPath, self.mask)
+        # cv2.imwrite(maskPath, self.mask)
 
         # close all open windows
         cv2.destroyAllWindows()
         return maskPath
 
 
-class MaskMover():
+class MaskMover:
+
     def __init__(self, image_path, mask_path):
         self.image_path, self.mask_path = image_path, mask_path
         self.image = cv2.imread(image_path)
@@ -148,11 +150,3 @@ class MaskMover():
         cv2.destroyAllWindows()
         return self.xi - self.x0, self.yi - self.y0, new_mask_path
 
-
-if __name__ == '__main__':
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--image", required=True, help="Path to the image")
-    args = vars(ap.parse_args())
-
-    mp = MaskPainter(args["image"])
-    mp.paint_mask()

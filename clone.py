@@ -79,7 +79,7 @@ def apply_offset(offset, source, target, mask):
     :param mask:
     :return:
     """
-    y_max, x_max = target.shape
+    y_max, x_max = target.shape[:2]
     y_min, x_min = 0, 0
 
     x_range = x_max - x_min
@@ -221,7 +221,7 @@ def shepards_single_channel(source, target, mask, offset, F):
     return blend
 
 
-def shepards_seamless_cloning(source, target, mask, offset, F):
+def shepards_seamless_cloning(source, target, mask, offset, F=None):
     """
     Based on Poisson solver
     :param source:
@@ -233,6 +233,8 @@ def shepards_seamless_cloning(source, target, mask, offset, F):
     """
     mask = mask > 0.1
     mask = mask.astype('uint8')
+    if F is None:
+        F = create_mask_dist_transform(mask)
     source, mask, y_max, x_max, y_min, x_min, x_range, y_range = apply_offset(offset, source, target, mask)
     source = source[y_min:y_max, x_min:x_max]
     target = target[y_min:y_max, x_min:x_max]
