@@ -4,6 +4,7 @@ import cv2
 from os import path
 
 
+
 class MaskPainter:
 
     def __init__(self, image_path):
@@ -51,16 +52,19 @@ class MaskPainter:
             elif key == ord("s"):
                 break
 
+            elif key == ord("f"):
+                break
+
             elif key == ord("q"):
                 cv2.destroyAllWindows()
                 exit()
 
-        # roi = self.mask
-        # cv2.imshow("Press any key to save the mask", roi)
-        # cv2.waitKey(0)
+        roi = self.mask
+        cv2.imshow("Press any key to save the mask", roi)
+        cv2.waitKey(0)
         maskPath = path.join(path.dirname(self.image_path),
                              'mask.png')
-        # cv2.imwrite(maskPath, self.mask)
+        cv2.imwrite(maskPath, self.mask)
 
         # close all open windows
         cv2.destroyAllWindows()

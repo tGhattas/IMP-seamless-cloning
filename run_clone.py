@@ -94,6 +94,11 @@ if __name__ == '__main__':
 
 '''
 running example:
+
+- Possion based solver:
 python run_clone.py -s external/blend-1.jpg -t external/main-1.jpg
+
+- Shepard's interpolation:
+python run_clone.py -s external/blend-1.jpg -t external/main-1.jpg -x 
 
 '''
