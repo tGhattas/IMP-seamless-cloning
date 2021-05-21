@@ -1,4 +1,5 @@
 from clone import *
+from utils import read_image, plot, pyramid_blending_example1
 
 
 def shepards_blending_example1():

@@ -226,7 +226,7 @@ def apply_filter(image, kernel, in_freq_domain=False):
         return cv2.filter2D(image, -1, kernel)
 
 
-def shepards_single_channel(source, target, mask, offset, F):
+def shepards_single_channel(source, target, mask, F):
     """
     Based on code for "Convolution Pyramid" - Farbman et al.
     link: https://www.cs.huji.ac.il/labs/cglab/projects/convpyr/
@@ -274,7 +274,7 @@ def shepards_seamless_cloning(source, target, mask, offset, F=None):
     mask = mask[y_min:y_max, x_min:x_max]
     result = np.zeros_like(target, dtype='uint8')
     for channel in tqdm(range(len('RGB')), desc="Shepard's seamless cloning RGB"):
-        tmp = shepards_single_channel(source[..., channel], target[..., channel], mask, offset, F)
+        tmp = shepards_single_channel(source[..., channel], target[..., channel], mask, F)
         result[..., channel] = tmp.reshape(mask.shape)
 
     return result
