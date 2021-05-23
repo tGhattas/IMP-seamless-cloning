@@ -20,3 +20,17 @@ python run_clone.py -s external/blend-1.jpg -t external/main-1.jpg
 
 - Shepard's interpolation:
 python run_clone.py -s external/blend-1.jpg -t external/main-1.jpg -x
+
+#################
+Modules:
+#################
+clone.py - have the main logic of both Shepard's interpolation & Poisson based solver.
+demo.py - includes examples.
+gui.py - implements cv2 based interactive GUI for marking mask on on source image.
+run_clone.py - CLI for the solution
+utils.py - includes basic auxiliary functions for image processing and a gaussian pyramid based blending implementation.
+
+
+######################
+Author: Tamer Ghattas
+######################
