@@ -196,7 +196,7 @@ def seamless_cloning(source, target, mask, offset=(0, 0), gradient_field_source_
     mask = mask > 0.1
     mask = mask.astype('uint8')
     result = np.zeros_like(target, dtype='uint8')
-    for channel in tqdm(range(len('RGB')), desc='Possion seamless cloning RGB'):
+    for channel in tqdm(range(len('RGB')), desc='Poisson seamless cloning RGB'):
         result[..., channel] = seamless_cloning_single_channel(source[..., channel], target[..., channel], mask, offset,
                                                                    gradient_field_source_only, vec_field)
     return result
@@ -284,7 +284,7 @@ def shepards_seamless_cloning(source, target, mask, offset, F=None):
 Note on running times:
     Shepard's based convolution uses cv2.Filter2d which uses the frequency domain to apply the filter, therefore the 
     time complexity of the blending is bound by O(NlogN) where N is the number of pixels.
-    However, in Possion based solver, it builds the blend by solving a sparse linear equation using multifrontal LU
+    However, in Poisson based solver, it builds the blend by solving a sparse linear equation using multifrontal LU
     factorization.
     
      On Macbook Pro mid 14, intel i5:

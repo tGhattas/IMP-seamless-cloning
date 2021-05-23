@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     #
     # set default mode to Possion solver
-    mode = "possion" if ("mode" not in args) else args["mode"]
+    mode = "poisson" if ("mode" not in args) else args["mode"]
     gradient_field_source_only = ("gradient_field_source_only" not in args)
 
     source = read_image(args["source"], 2)
@@ -87,8 +87,8 @@ if __name__ == '__main__':
     target_mask = read_image(target_mask_path, 1)
     offset = offset_x, offset_y
 
-    cloning_tool = seamless_cloning if mode == "possion" else shepards_seamless_cloning
-    kwargs = {"gradient_field_source_only": gradient_field_source_only} if mode == "possion" else {}
+    cloning_tool = seamless_cloning if mode == "poisson" else shepards_seamless_cloning
+    kwargs = {"gradient_field_source_only": gradient_field_source_only} if mode == "poisson" else {}
     blend_result = cloning_tool(source, target, target_mask, offset, **kwargs)
 
     cv2.imwrite(path.join(path.dirname(args["source"]), 'target_result.png'),
