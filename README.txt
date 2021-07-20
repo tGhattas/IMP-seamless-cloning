@@ -1,3 +1,11 @@
+Regular gaussian pyramid blending:
+![alt text](https://github.com/tGhattas/IMP-seamless-cloning/blob/master/exports/pyramid-monkey.png?raw=true)
+
+Poisson based image cloning:
+![alt text](https://github.com/tGhattas/IMP-seamless-cloning/blob/master/exports/poisson-monkey.png?raw=true)
+
+
+
 #################
 Running Manual:
 #################
@@ -30,7 +38,8 @@ gui.py - implements cv2 based interactive GUI for marking mask on on source imag
 run_clone.py - CLI for the solution
 utils.py - includes basic auxiliary functions for image processing and a gaussian pyramid based blending implementation.
 
-
 ######################
 Author: Tamer Ghattas
 ######################
+
+
