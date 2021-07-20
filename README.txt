@@ -1,8 +1,8 @@
 Regular gaussian pyramid blending:
-![alt text](https://github.com/tGhattas/IMP-seamless-cloning/blob/master/exports/pyramid-monkey.png?raw=true)
+![Alt text](https://github.com/tGhattas/IMP-seamless-cloning/blob/master/exports/pyramid-monkey.png?raw=true)
 
 Poisson based image cloning:
-![alt text](https://github.com/tGhattas/IMP-seamless-cloning/blob/master/exports/poisson-monkey.png?raw=true)
+![Alt text](https://github.com/tGhattas/IMP-seamless-cloning/blob/master/exports/poisson-monkey.png?raw=true)
 
 
 
