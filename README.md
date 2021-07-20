@@ -39,7 +39,6 @@ python run_clone.py -s external/blend-1.jpg -t external/main-1.jpg -x
 * utils.py - includes basic auxiliary functions for image processing and a gaussian pyramid based blending implementation.
 
 
-Author: Tamer Ghattas
 
 
 
