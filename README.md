@@ -12,7 +12,6 @@
 
 
 python run_clone.py [options]
-- Options:
  - -h	 Flag to specify a brief help message and exits.
  - -s	(Required) Specify a source image.
  - -t	(Required) Specify a target image.
