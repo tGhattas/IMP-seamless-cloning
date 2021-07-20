@@ -12,12 +12,12 @@
 
 
 python run_clone.py [options]
-        Options:
-        	-h	 Flag to specify a brief help message and exits.
-        	-s	(Required) Specify a source image.
-        	-t	(Required) Specify a target image.
-        	-m	(Optional) Specify a mask image with the object in white and other part in  black, ignore this option if you plan to draw it later.
-            -x	(Optional) Flag to specify a mode, either 'poisson' or 'shepard'. default is poisson.
+      - Options:
+        	- -h	 Flag to specify a brief help message and exits.
+        	- -s	(Required) Specify a source image.
+        	- -t	(Required) Specify a target image.
+        	- -m	(Optional) Specify a mask image with the object in white and other part in  black, ignore this option if you plan to draw it later.
+            - -x	(Optional) Flag to specify a mode, either 'poisson' or 'shepard'. default is poisson.
 
 
 
